@@ -1,0 +1,28 @@
+{
+  "name": "bupload",
+  "version": "0.1.0",
+  "description": "upload file by parts",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rockedpanda/bupload.git"
+  },
+  "keywords": [
+    "upload",
+    "parts",
+    "FileReader"
+  ],
+  "author": "rockedpanda",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/rockedpanda/bupload/issues"
+  },
+  "homepage": "https://github.com/rockedpanda/bupload#readme",
+  "dependencies": {
+    "underscore": "^1.9.1",
+    "uuid": "^3.3.2"
+  }
+}

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>首页</title>
+    <script src="https://cdn.bootcss.com/underscore.js/1.9.1/underscore-min.js"></script>
+    <script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script>
+</head>
+<body>
+    <h1>测试大文件分配上传</h1>
+    <input type="file" id="f"><a href="javascript:send()">上传</a><span id="process"></span>
+    <hr />
+    <div id="main"></div>
+</body>
+<script>
+    function send() {
+        var f = document.getElementById('f'); //input file控件
+        sendByParts.addFile(f.files[0]);
+    }
+    $(function(){
+        $('#process').on('process', function(e, data){
+            console.log(e, data);
+            $('#process').html($('#process').html()+'<br/>'+data);
+        });
+    });
+
+    var sendByParts = {
+        _lastId: 0,
+        getId:function(){
+            this._lastId++;
+            return this._lastId;
+        },
+        pool:[], //待上传分片信息
+        workerSize: 5,//并发线程
+        perPartSize: 5*1024*1024, //单个块的最大字节数
+        curWorkerCount: 0,
+        totalCount:0,
+        finishCount:0,
+        emitProcess:function(finished, total){
+            $('#process').trigger('process',finished + '/' + total);
+        },
+        addFile:function(f){
+            let name = f.name;
+            let total = f.size;
+            let partSize = Math.min(total, this.perPartSize); //超过5M,每块大小设置为5M
+            for(var start=0;start<total;start+=partSize){
+                this.pool.push({
+                    id: this.getId(),
+                    fileName:name,
+                    start:start,
+                    end:Math.min(start+partSize, total),
+                    total: total,
+                    f: f
+                });
+            }
+            console.table(this.pool);
+            this.totalCount += this.pool.length;
+            this.next();
+            this.emitProcess(this.finishCount, this.totalCount);
+        },
+        next: function(){
+            // console.table(this.pool);
+            if(this.curWorkerCount===this.workerSize){
+                return Promise.resolve(false);
+            }
+            if(this.pool.length===0){
+                return Promise.resolve(true);
+            }
+            let part = this.pool[0];
+            this.pool.shift();
+            this.curWorkerCount++;
+            fetch(`upload/upload?fileName=${part.fileName}&start=${part.start}&end=${part.end}&total=${part.total}`,{
+                method:'PUT',
+                body: part.f.slice(part.start, part.end)
+            }).then(x => x.text()).then(x => {
+                console.log(x); //此处假定响应信息是text
+                // this.removePartById(partId);
+                this.curWorkerCount--;
+                this.finishCount++;
+                this.emitProcess(this.finishCount, this.totalCount);
+                if(this.finishCount === this.totalCount){
+                    this.finishCount=0;
+                    this.totalCount=0;
+                }
+            }).then(()=>{
+                this.next();
+            });
+            if(this.curWorkerCount< this.workerSize){
+                this.next();//worker不饱和,启动一个新的
+            }
+        },
+        removePartById:function(id){
+            let index = _.findIndex(this.pool, x=>x.id===id);
+            this.pool.splice(index,1);
+        }
+    }
+</script>
+</html>
