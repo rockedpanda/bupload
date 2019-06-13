@@ -5,10 +5,17 @@ const fs = require('fs');
 var blocks = require('./blocks.js');
 
 router.put('/upload', function (req, res, next) {
-    let { fileName, start=0, end=0, total=0 } = req.query;
-    start = parseInt(start, 10);
-    end = parseInt(end, 10);
+    let fileName = req.query.fileName;
+    let contentRangeHeader = req.header('Content-Range');
+    let { start = 0, end = 0, total = 0 } = req.query;
+    if (contentRangeHeader && contentRangeHeader.match(/^bytes [0-9]+-[0-9]+\/[0-9]+$/)) {
+        //如果包含Content-Range头,且格式合法,优先使用头里面的.
+        [start, end, total] = contentRangeHeader.match(/\d+/g).slice(0);
+    }
+    start = parseInt(start, 10); //索引从0开始,对应字节包含在内
+    end = parseInt(end, 10);  //end对应字节包含在内
     total = parseInt(total, 10);
+
     console.log({ fileName, start, end, total });
     if(total === 0){
         const tmpPath = blocks.getPathForName(fileName);

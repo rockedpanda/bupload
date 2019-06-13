@@ -49,3 +49,9 @@ express模块/中间件
 
 改进空间:
 1 客户端和服务端的MD5检查: 减少相同数据的发送;校验数据相同;
+
+### 相关规范
+HTTP 1.1中对于Content-Range指定范围的方式:
+ Content-Range: bytes start-end/total
+ start end total为整数,start从0计数,0-499表示前500字节
+ total为*表示整体范围未知

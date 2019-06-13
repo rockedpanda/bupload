@@ -73,11 +73,11 @@ function checkFile(filePath) {
     return false;
   }
   const lastItem = curList[curList.length - 1];
-  if (lastItem[1] !== info.total) {
+  if (lastItem[1] !== info.total-1) { //最后一个end对应索引号应该等于total-1
     return false;
   }
   for (let i = 1; i < curList.length; i++) {
-    if (curList[i][0] !== curList[i - 1][1]) {
+    if (curList[i][0] !== curList[i - 1][1]+1) { //下一个块的起始编号应该等于上一个块的终止编号加1
       return false;
     }
   }
